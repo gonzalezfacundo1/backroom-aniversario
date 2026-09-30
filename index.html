@@ -38,7 +38,7 @@
   }
 
   *{ box-sizing:border-box; }
-  html,body{ margin:0; background:var(--bg); color:var(--text); font-family:'Suisse Intl',sans-serif; font-weight:400; -webkit-font-smoothing:antialiased; }
+  html,body{ margin:0; background:var(--bg); color:var(--text); font-family:'Suisse Intl',sans-serif; font-weight:400; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; font-kerning:normal; font-feature-settings:"kern" 1,"liga" 1; }
   body{ min-height:100vh; }
 
   .heading{ font-family:'Canela',serif; font-weight:300; font-style:normal; }
@@ -159,7 +159,7 @@
     background:var(--confirm-bg); color:var(--confirm-text);
     padding:16px 8px; font-family:'Suisse Intl',sans-serif; font-weight:500;
     font-size:15px; line-height:1.2;
-    display:flex; align-items:center; justify-content:center; gap:16px;
+    position:relative; display:flex; align-items:center; justify-content:center;
     cursor:pointer; transition: transform 120ms ease-out, filter 150ms ease;
   }
   .submit:hover:not(:disabled){ filter:brightness(0.96); }
@@ -167,12 +167,41 @@
   .submit:disabled{ opacity:0.6; cursor:default; }
   .submit svg{ width:20px; height:20px; }
 
+  .submit-label{
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    transition: opacity 180ms ease-out, transform 180ms ease-out;
+  }
+  .submit-label-loading{
+    position:absolute; inset:0;
+    opacity:0; transform:translateY(4px); pointer-events:none;
+    background: linear-gradient(90deg, var(--confirm-text) 30%, #6b7280 50%, var(--confirm-text) 70%);
+    background-size:200% 100%;
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+    animation: shimmer-dark 1.4s linear infinite;
+    animation-play-state:paused;
+  }
+  @keyframes shimmer-dark{ from{ background-position:100% 0; } to{ background-position:-100% 0; } }
+  .submit.is-submitting .submit-label-default{ opacity:0; transform:translateY(-4px); pointer-events:none; }
+  .submit.is-submitting .submit-label-loading{ opacity:1; transform:translateY(0); animation-play-state:running; }
+
   .status-msg{ font-size:13px; color:var(--muted); min-height:16px; }
   .status-msg.error{ color:#d98a8a; }
 
   /* ---------- states ---------- */
   .state{ display:none; }
   .state.active{ display:flex; flex-direction:column; gap:40px; animation: state-in 240ms cubic-bezier(0.23,1,0.32,1) both; }
+  #state-invite.active{ animation:none; } /* los hijos .reveal manejan su propia entrada, escalonada */
+
+  .reveal{
+    opacity:0;
+    filter: blur(8px);
+    transform: translateY(10px);
+    animation: reveal-in 600ms cubic-bezier(0.16,1,0.3,1) both;
+    animation-delay: var(--delay, 0ms);
+  }
+  @keyframes reveal-in{
+    to{ opacity:1; filter:blur(0px); transform:translateY(0); }
+  }
   .state.state-leaving{ display:flex; flex-direction:column; gap:40px; animation: state-out 160ms ease-out both; pointer-events:none; }
   @keyframes state-in{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
   @keyframes state-out{ from{ opacity:1; } to{ opacity:0; } }
@@ -249,14 +278,14 @@
     <div class="state" id="state-invite">
       <div class="top-group">
         <div class="intro-block">
-          <div class="salutation-block">
+          <div class="salutation-block reveal" style="--delay:0ms">
             <p class="salutation">Querido/a,</p>
             <p class="guest-name heading" id="guest-name">—</p>
           </div>
-          <p class="intro-copy">Seis años escribiendo la misma historia, con la misma gente. Este año queremos celebrarlo con quienes fueron parte de cada capítulo — y vos sos uno de ellos.</p>
+          <p class="intro-copy reveal" style="--delay:70ms">Seis años escribiendo la misma historia, con la misma gente. Este año queremos celebrarlo con quienes fueron parte de cada capítulo — y vos sos uno de ellos.</p>
         </div>
 
-        <div class="details-card">
+        <div class="details-card reveal" style="--delay:140ms">
           <div class="details-row">
             <div class="details-item">
               <p class="details-label">Fecha y hora</p>
@@ -277,9 +306,9 @@
       </div>
 
       <div class="rsvp-block">
-        <p class="rsvp-title heading">¿Contamos con vos?</p>
+        <p class="rsvp-title heading reveal" style="--delay:210ms">¿Contamos con vos?</p>
 
-        <div class="stepper">
+        <div class="stepper reveal" style="--delay:280ms">
           <button type="button" class="remove" id="minus" aria-label="Restar">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
@@ -289,9 +318,12 @@
           </button>
         </div>
 
-        <button class="submit" id="submit">
-          <span>Confirmar asistencia</span>
-          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTkuOTk5MDEgMEM3LjM0ODM5IDAuMDAyOTQyMzIgNC44MDcxNCAxLjA1NzU0IDIuOTMyNiAyLjkzMTY0QzEuMDU4MjEgNC44MDU3IDAuMDAzNjc1MTMgNy4zNDY0NiAtMS40NTc5OGUtMDUgOS45OTcwN0MtMC4wMDA1NTE1OSAxMS45NzUgMC41ODUxODMgMTMuOTA4OSAxLjY4MzU4IDE1LjU1MzdDMi43ODIwMyAxNy4xOTg2IDQuMzQzNzQgMTguNDgxIDYuMTcwODggMTkuMjM4M0M3Ljk5NzkxIDE5Ljk5NTUgMTAuMDA4NCAyMC4xOTQxIDExLjk0ODIgMTkuODA4NkMxMy44ODgxIDE5LjQyMyAxNS42NzA2IDE4LjQ3MDcgMTcuMDY5MyAxNy4wNzIzQzE4LjQ2OCAxNS42NzM5IDE5LjQyMDYgMTMuODkyIDE5LjgwNjYgMTEuOTUyMUMyMC4xOTI3IDEwLjAxMjMgMTkuOTk1IDguMDAxMjUgMTkuMjM4MyA2LjE3MzgzQzE4LjQ4MTUgNC4zNDY0IDE3LjE5OTIgMi43ODQ0OSAxNS41NTQ3IDEuNjg1NTVDMTMuOTEwMiAwLjU4NjcyMiAxMS45NzY4IDcuMjkwNDhlLTA4IDkuOTk5MDEgMFpNNi41ODM5NyAxLjc1MTk1QzguMjE0NjcgMS4wNzY0NyAxMC4wMDkxIDAuODk5ODAyIDExLjc0MDIgMS4yNDQxNEMxMy40NzEzIDEuNTg4NDkgMTUuMDYxNSAyLjQzODQ1IDE2LjMwOTYgMy42ODY1MkMxNy41NTc2IDQuOTM0NTcgMTguNDA3NSA2LjUyNDc5IDE4Ljc1MTkgOC4yNTU4NkMxOS4wOTYzIDkuOTg3MTEgMTguOTE5NiAxMS43ODIzIDE4LjI0NDEgMTMuNDEzMUMxNy41Njg2IDE1LjA0MzggMTYuNDI0NSAxNi40Mzc0IDE0Ljk1NyAxNy40MThDMTMuNDg5NCAxOC4zOTg2IDExLjc2NCAxOC45MjE5IDkuOTk5MDEgMTguOTIxOVYxOC45MzM2QzcuNjMxMzggMTguOTMwNiA1LjM2MTcxIDE3Ljk4NzYgMy42ODg0NiAxNi4zMTI1QzIuMDE1MTEgMTQuNjM3IDEuMDc1MTggMTIuMzY1MSAxLjA3NTE4IDkuOTk3MDdDMS4wNzUyNSA4LjIzMjAzIDEuNTk4NTIgNi41MDY2NCAyLjU3OTA5IDUuMDM5MDZDMy41NTk3MSAzLjU3MTQ0IDQuOTUzMjkgMi40Mjc0NCA2LjU4Mzk3IDEuNzUxOTVaTTkuOTU1MDYgNi40MTYwMkwxMy4wMTI3IDkuNDcyNjZINC4wOTA4MVYxMC41NDU5SDEzLjAxMjdMOS45NTIxMyAxMy42MDI1TDEwLjcxMjkgMTQuMzYzM0wxNC42ODQ2IDEwLjM4NzdWOS42MzA4NkwxMC43MTI5IDUuNjU1MjdMOS45NTUwNiA2LjQxNjAyWiIgZmlsbD0iIzI5MkYzQiIvPgo8L3N2Zz4K" alt="" width="20" height="20">
+        <button class="submit reveal" id="submit" style="--delay:340ms">
+          <span class="submit-label submit-label-default">
+            <span>Confirmar asistencia</span>
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTkuOTk5MDEgMEM3LjM0ODM5IDAuMDAyOTQyMzIgNC44MDcxNCAxLjA1NzU0IDIuOTMyNiAyLjkzMTY0QzEuMDU4MjEgNC44MDU3IDAuMDAzNjc1MTMgNy4zNDY0NiAtMS40NTc5OGUtMDUgOS45OTcwN0MtMC4wMDA1NTE1OSAxMS45NzUgMC41ODUxODMgMTMuOTA4OSAxLjY4MzU4IDE1LjU1MzdDMi43ODIwMyAxNy4xOTg2IDQuMzQzNzQgMTguNDgxIDYuMTcwODggMTkuMjM4M0M3Ljk5NzkxIDE5Ljk5NTUgMTAuMDA4NCAyMC4xOTQxIDExLjk0ODIgMTkuODA4NkMxMy44ODgxIDE5LjQyMyAxNS42NzA2IDE4LjQ3MDcgMTcuMDY5MyAxNy4wNzIzQzE4LjQ2OCAxNS42NzM5IDE5LjQyMDYgMTMuODkyIDE5LjgwNjYgMTEuOTUyMUMyMC4xOTI3IDEwLjAxMjMgMTkuOTk1IDguMDAxMjUgMTkuMjM4MyA2LjE3MzgzQzE4LjQ4MTUgNC4zNDY0IDE3LjE5OTIgMi43ODQ0OSAxNS41NTQ3IDEuNjg1NTVDMTMuOTEwMiAwLjU4NjcyMiAxMS45NzY4IDcuMjkwNDhlLTA4IDkuOTk5MDEgMFpNNi41ODM5NyAxLjc1MTk1QzguMjE0NjcgMS4wNzY0NyAxMC4wMDkxIDAuODk5ODAyIDExLjc0MDIgMS4yNDQxNEMxMy40NzEzIDEuNTg4NDkgMTUuMDYxNSAyLjQzODQ1IDE2LjMwOTYgMy42ODY1MkMxNy41NTc2IDQuOTM0NTcgMTguNDA3NSA2LjUyNDc5IDE4Ljc1MTkgOC4yNTU4NkMxOS4wOTYzIDkuOTg3MTEgMTguOTE5NiAxMS43ODIzIDE4LjI0NDEgMTMuNDEzMUMxNy41Njg2IDE1LjA0MzggMTYuNDI0NSAxNi40Mzc0IDE0Ljk1NyAxNy40MThDMTMuNDg5NCAxOC4zOTg2IDExLjc2NCAxOC45MjE5IDkuOTk5MDEgMTguOTIxOVYxOC45MzM2QzcuNjMxMzggMTguOTMwNiA1LjM2MTcxIDE3Ljk4NzYgMy42ODg0NiAxNi4zMTI1QzIuMDE1MTEgMTQuNjM3IDEuMDc1MTggMTIuMzY1MSAxLjA3NTE4IDkuOTk3MDdDMS4wNzUyNSA4LjIzMjAzIDEuNTk4NTIgNi41MDY2NCAyLjU3OTA5IDUuMDM5MDZDMy41NTk3MSAzLjU3MTQ0IDQuOTUzMjkgMi40Mjc0NCA2LjU4Mzk3IDEuNzUxOTVaTTkuOTU1MDYgNi40MTYwMkwxMy4wMTI3IDkuNDcyNjZINC4wOTA4MVYxMC41NDU5SDEzLjAxMjdMOS45NTIxMyAxMy42MDI1TDEwLjcxMjkgMTQuMzYzM0wxNC42ODQ2IDEwLjM4NzdWOS42MzA4NkwxMC43MTI5IDUuNjU1MjdMOS45NTUwNiA2LjQxNjAyWiIgZmlsbD0iIzI5MkYzQiIvPgo8L3N2Zz4K" alt="" width="20" height="20">
+          </span>
+          <span class="submit-label submit-label-loading">Confirmando</span>
         </button>
         <p class="status-msg" id="form-status"></p>
       </div>
@@ -314,7 +346,7 @@
 <script>
 (function(){
   // ⚠️ Reemplazar por la URL "/exec" de tu implementación de Code.gs.
-  const WEBAPP_URL = 'https://script.google.com/macros/s/REEMPLAZAR_CON_TU_ID/exec';
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby1G7uIbiKUGLJKP4YZK5UQVo9AlEwyc-5m2QaheHlqhMkCBY5aiKd7gXqV5Klch1xVrA/exec';
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
@@ -390,7 +422,8 @@
     const btn = document.getElementById('submit');
     const statusEl = document.getElementById('form-status');
     btn.disabled = true;
-    statusEl.textContent = 'Enviando…';
+    btn.classList.add('is-submitting');
+    statusEl.textContent = '';
     statusEl.classList.remove('error');
 
     if (PREVIEW_MODE){ setTimeout(() => showDone(count), 400); return; }
@@ -402,7 +435,12 @@
     })
       .then(r => r.json())
       .then(data => { if(!data.ok) throw new Error(data.error||'Error'); showDone(count); })
-      .catch(() => { statusEl.textContent='No se pudo enviar. Probá de nuevo en un momento.'; statusEl.classList.add('error'); btn.disabled=false; });
+      .catch(() => {
+        btn.classList.remove('is-submitting');
+        statusEl.textContent='No se pudo enviar. Probá de nuevo en un momento.';
+        statusEl.classList.add('error');
+        btn.disabled=false;
+      });
   });
 
   function showDone(finalCount){
