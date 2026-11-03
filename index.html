@@ -1262,7 +1262,7 @@ export async function mountFlare(canvas) {
 
   let vgpuApi;
   try {
-    vgpuApi = await import('https://cdn.jsdelivr.net/npm/vgpu/+esm');
+    vgpuApi = await import('https://cdn.jsdelivr.net/npm/vgpu@0.5.0/+esm');
   } catch (error) {
     return false;
   }
