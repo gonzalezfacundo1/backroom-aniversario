@@ -261,8 +261,11 @@
   /* ---------- portada: sin id de invitación ---------- */
   /* Foto a pantalla completa, sin el degradé inferior, y logo + separador + badge centrados. */
   body.landing{ overflow:hidden; }
-  body.landing .hero{ height:100vh; height:100dvh; }
+  /* La foto de portada va en un archivo aparte: sólo se descarga cuando se entra sin id. */
+  body.landing .hero{ height:100vh; height:100dvh; background-image:url(portada.jpg); }
   body.landing .hero::after{ display:none; }
+  /* Overlay más oscuro que en la invitación, para que el logo, el destello y el badge no se pierdan. */
+  body.landing .hero::before{ background:rgba(0,0,0,0.6); }
   body.landing .hero-brand-row{ top:50%; transform:translate(-50%,-50%); }
   body.landing .headline-wrap,
   body.landing .content{ display:none; }
