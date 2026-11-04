@@ -258,6 +258,15 @@
     .content{ margin-top:-40px; }
   }
 
+  /* ---------- portada: sin id de invitación ---------- */
+  /* Foto a pantalla completa, sin el degradé inferior, y logo + separador + badge centrados. */
+  body.landing{ overflow:hidden; }
+  body.landing .hero{ height:100vh; height:100dvh; }
+  body.landing .hero::after{ display:none; }
+  body.landing .hero-brand-row{ top:50%; transform:translate(-50%,-50%); }
+  body.landing .headline-wrap,
+  body.landing .content{ display:none; }
+
   /* ---------- mobile ---------- */
   @media (max-width:640px){
     .hero{ height:380px; }
@@ -399,7 +408,12 @@
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
-  const PREVIEW_MODE = !id;
+  // Sin id: portada (foto + logo). Con ?demo: invitación de ejemplo para revisar el diseño.
+  const PREVIEW_MODE = !id && params.has('demo');
+  if (!id && !PREVIEW_MODE){
+    document.body.classList.add('landing');
+    return;
+  }
 
   const states = {
     loading: document.getElementById('state-loading'),
